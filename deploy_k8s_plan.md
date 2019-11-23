@@ -65,7 +65,7 @@ and check to make sure that only the key(s) you wanted were added.
 3.配置ansible主机组
 vi /etc/ansible/hosts
 [k8s]
-10.6.21.[60:61]
+10.6.203.[60:61]
 
 4.验证ansible工作状态
 ansible all -m ping 
