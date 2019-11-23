@@ -112,7 +112,6 @@ Nov 23 21:56:22 k8s-master03 systemd[1]: Started LSB: Start privoxy at boot time
 # netstat -anltp | grep 8118
 tcp        0      0 127.0.0.1:8118          0.0.0.0:*               LISTEN      29542/privoxy  
 3. 测试internet联通性
-```
 - curl测试
 curl google.com
 - 我自己搞了个k8s-repo,所以我直接yum makecache
