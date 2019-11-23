@@ -3,8 +3,8 @@
 - 基础环境规划
 ```
 1.节点配置 
-k8s-master01    4c/8g/80g_os、100g_docker_volume     10.6.203.60 root/maweibing  ansible_node_v2.4.2.0
-k8s-master02    4c/8g/80g_os、100g_docker_volume     10.6.203.61 root/maweibing
+k8s-master01    4c/8g/80g_os、100g_docker_volume     10.6.21.x root/xxxxxx  ansible_node_v2.4.2.0
+k8s-master02    4c/8g/80g_os、100g_docker_volume     10.6.21.x root/xxxxxx
 2.系统优化
 #关闭selinux安装机制
 setenforce 0
@@ -15,6 +15,7 @@ swapoff -a
 cat <<EOF >  /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
 EOF
 ```
 
@@ -64,23 +65,23 @@ and check to make sure that only the key(s) you wanted were added.
 3.配置ansible主机组
 vi /etc/ansible/hosts
 [k8s]
-10.6.203.[60:61]
+10.6.21.[60:61]
 
 4.验证ansible工作状态
 ansible all -m ping 
-10.6.203.60 | UNREACHABLE! => {
+10.6.21.16 | UNREACHABLE! => {
     "changed": false, 
-    "msg": "Failed to connect to the host via ssh: Warning: Permanently added '10.6.203.60' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password).\r\n", 
+    "msg": "Failed to connect to the host via ssh: Warning: Permanently added '10.6.21.16' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password).\r\n", 
     "unreachable": true
 }
 如果遇到这种报错，请将ansible节点所所生成的pub密钥追加到.ssh/目录下的authorized_keys文件中即可解决(ansible执行命令是使用python库调用节点的ssh服务，若此时不能免密登陆，就会报这个错误),但是后续使用还是会ask，把ansible节点改为StrictHostKeyChecking no
 (默认为ask)
 ansible all -m ping 
-10.6.203.61 | SUCCESS => {
+10.6.21.16 | SUCCESS => {
     "changed": false, 
     "ping": "pong"
 }
-10.6.203.60 | SUCCESS => {
+10.6.21.16 | SUCCESS => {
     "changed": false, 
     "ping": "pong"
 }
@@ -140,10 +141,6 @@ EOF
 2.安装kubeadm、kubelet、kubectl
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 ```
-
-
-
-
 - 从dockerhub下载k8s组件镜像文件(docker将imgage镜像到了dockerHub中)
 ```
 [参考1](https://hub.docker.com/u/mirrorgooglecontainers/)
@@ -165,7 +162,6 @@ docker tag mirrorgooglecontainers/pause:3.1 k8s.gcr.io/pause:3.1
 docker tag mirrorgooglecontainers/etcd:3.3.15-0 k8s.gcr.io/etcd:3.3.15-0
 docker tag coredns/coredns:1.6.2 k8s.gcr.io/coredns:1.6.2
 ```
-
 - kubeadm 初始化集群
 ```
 1.打印默认的cluster配置文件
@@ -241,10 +237,11 @@ Then you can join any number of worker nodes by running the following on each as
 kubeadm join 10.6.203.60:6443 --token abcdef.0123456789abcdef \
     --discovery-token-ca-cert-hash sha256:3df3bcde7bddf019fced3d8a726c458ae09c4d8bd0a87585cd740ff946bf1830 
 ```
-- 部署pod网络
+- 部署calico网络
 ```
-https://kubernetes.io/docs/concepts/cluster-administration/addons/
-https://docs.projectcalico.org/v3.9/getting-started/kubernetes/
+[k8s_network](https://kubernetes.io/docs/concepts/cluster-administration/addons/)
+[calico_install](https://docs.projectcalico.org/v3.9/getting-started/kubernetes/)
+
 [root@k8s-master01 ~]# kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml
 configmap/calico-config created
 customresourcedefinition.apiextensions.k8s.io/felixconfigurations.crd.projectcalico.org created
@@ -269,67 +266,4 @@ daemonset.apps/calico-node created
 serviceaccount/calico-node created
 deployment.apps/calico-kube-controllers created
 serviceaccount/calico-kube-controllers created
-```
-
-
-
-docker tag k8s.gcr.io/kube-apiserver:v1.16.0          10.6.203.60:5000/kube-apiserver:v1.16.0   
-docker tag k8s.gcr.io/kube-proxy:v1.16.0              10.6.203.60:5000/kube-proxy:v1.16.0
-docker tag k8s.gcr.io/kube-controller-manager:v1.16.0 10.6.203.60:5000/kube-controller-manager:v1.16.0
-docker tag k8s.gcr.io/kube-scheduler:v1.16.0          10.6.203.60:5000/kube-scheduler:v1.16.0 
-docker tag k8s.gcr.io/etcd:3.3.15-0                   10.6.203.60:5000/etcd:3.3.15-0 
-docker tag k8s.gcr.io/coredns:1.6.2                   10.6.203.60:5000/coredns:1.6.2
-docker tag k8s.gcr.io/pause:3.1                       10.6.203.60:5000/pause:3.1 
-
-
-docker push 10.6.203.60:5000/kube-apiserver:v1.16.0   
-docker push 10.6.203.60:5000/kube-proxy:v1.16.0
-docker push 10.6.203.60:5000/kube-controller-manager:v1.16.0
-docker push 10.6.203.60:5000/kube-scheduler:v1.16.0 
-docker push 10.6.203.60:5000/etcd:3.3.15-0 
-docker push 10.6.203.60:5000/coredns:1.6.2
-docker push 10.6.203.60:5000/pause:3.1 
-
-- 接入报错
-```
-kubeadm token create --print-join-command
-
-kubeadm join 10.6.203.60:6443 --token es76wf.2uoyxv9s7jl6t0ob     --discovery-token-ca-cert-hash sha256:78c4cc969d3685dca6f5d755f16150f9017db13069f96ba92125f90062b1d335 --control-plane
-
-1. master节点
-kubeadm join 10.6.203.60:6443 --token es76wf.2uoyxv9s7jl6t0ob     --discovery-token-ca-cert-hash sha256:78c4cc969d3685dca6f5d755f16150f9017db13069f96ba92125f90062b1d335 --control-plane
-[preflight] Running pre-flight checks
-        [WARNING Service-Docker]: docker service is not enabled, please run 'systemctl enable docker.service'
-        [WARNING Hostname]: hostname "k8s-master02" could not be reached
-        [WARNING Hostname]: hostname "k8s-master02": lookup k8s-master02 on 192.168.1.29:53: no such host
-[preflight] Reading configuration from the cluster...
-[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -oyaml'
-error execution phase preflight: 
-One or more conditions for hosting a new control plane instance is not satisfied.
-
-unable to add a new control plane instance a cluster that doesn't have a stable controlPlaneEndpoint address
-
-Please ensure that:
-* The cluster has a stable controlPlaneEndpoint address.
-* The certificates that must be shared among control plane instances are provided.
-
-
-To see the stack trace of this error execute with --v=5 or higher
-
-2. worker节点
-[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
-I1018 20:41:18.729485    2015 kubelet.go:168] [kubelet-start] preserving the crisocket information for the node
-I1018 20:41:18.729527    2015 patchnode.go:30] [patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "k8s-master02" as an annotation
-[kubelet-check] Initial timeout of 40s passed.
-```
-
-
-- 报错
-```
-[root@k8s-master01 ~]# kubectl get po
-Unable to connect to the server: x509: certificate signed by unknown authority (possibly because of "crypto/rsa: verification error" while trying to verify candidate authority certificate "kubernetes")
-解决方法：
-export KUBECONFIG=/etc/kubernetes/kubelet.conf
-kubectl get nodes
-
 ```
