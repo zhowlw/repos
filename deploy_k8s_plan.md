@@ -3,12 +3,12 @@
 - 基础环境规划
 ```
 1.节点配置 
-k8s-master01    4c/8g/80g_os、100g_docker_volume     10.6.203.60 root/maweibing  ansible_node_v2.4.2.0
-k8s-master02    4c/8g/80g_os、100g_docker_volume     10.6.203.61 root/maweibing
+k8s-master01    4c/8g/80g_os、100g_docker_volume     10.6.x.x root/xxxxxxxxx ansible_node_v2.4.2.0
+k8s-master02    4c/8g/80g_os、100g_docker_volume     10.6.x.x root/xxxxxxxxx
 
 ```
 
-- 配置ansible运维工具
+- 配置ansible工具
 ```
 1.安装ansible 
 yum isntall -d ansible && yum install -y ansible
@@ -63,7 +63,7 @@ ansible all -m ping
     "msg": "Failed to connect to the host via ssh: Warning: Permanently added '10.6.203.60' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password).\r\n", 
     "unreachable": true
 }
-如果遇到这种报错，请将ansible节点所所生成的pub密钥追加到.ssh/目录下的authorized_keys文件中即可解决(ansible执行命令是使用python库调用节点的ssh服务，若此时不能免密登陆，就会报这个错误),但是后续使用还是会ask，把ansible节点改为StrictHostKeyChecking no
+如果遇到这种报错，请将ansible节点所生成的pub密钥追加到.ssh/目录下的authorized_keys文件中即可解决(ansible执行命令是使用python库调用节点的ssh服务，若此时不能免密登陆，就会报这个错误),但是后续使用还是会ask，把ansible节点改为StrictHostKeyChecking no
 (默认为ask)
 ansible all -m ping 
 10.6.203.61 | SUCCESS => {
