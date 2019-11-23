@@ -1,4 +1,4 @@
-# deploy_k8s_plan
+# deploy_k8s_masterNode
 
 - 基础环境规划
 ```
@@ -69,24 +69,23 @@ vi /etc/ansible/hosts
 
 4.验证ansible工作状态
 ansible all -m ping 
-10.6.21.16 | UNREACHABLE! => {
+10.6.203.60 | UNREACHABLE! => {
     "changed": false, 
-    "msg": "Failed to connect to the host via ssh: Warning: Permanently added '10.6.21.16' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password).\r\n", 
+    "msg": "Failed to connect to the host via ssh: Warning: Permanently added '10.6.203.60' (ECDSA) to the list of known hosts.\r\nPermission denied (publickey,gssapi-keyex,gssapi-with-mic,password).\r\n", 
     "unreachable": true
 }
 如果遇到这种报错，请将ansible节点所所生成的pub密钥追加到.ssh/目录下的authorized_keys文件中即可解决(ansible执行命令是使用python库调用节点的ssh服务，若此时不能免密登陆，就会报这个错误),但是后续使用还是会ask，把ansible节点改为StrictHostKeyChecking no
 (默认为ask)
 ansible all -m ping 
-10.6.21.16 | SUCCESS => {
+10.6.203.60 | SUCCESS => {
     "changed": false, 
     "ping": "pong"
 }
-10.6.21.16 | SUCCESS => {
+10.6.203.61 | SUCCESS => {
     "changed": false, 
     "ping": "pong"
 }
 ```
-
 - 安装docker
 ```
 1.安装devicemapper相关工具
@@ -142,10 +141,10 @@ EOF
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 ```
 - 从dockerhub下载k8s组件镜像文件(docker将imgage镜像到了dockerHub中)
-```
-[参考1](https://hub.docker.com/u/mirrorgooglecontainers/)
-[DockerHub](https://hub.docker.com/u/mirrorgooglecontainers/)
 
+[DockerHub](https://hub.docker.com/u/mirrorgooglecontainers/)
+```
+1. 下载镜像文件
 docker pull mirrorgooglecontainers/kube-apiserver-amd64:v1.16.0
 docker pull mirrorgooglecontainers/kube-controller-manager-amd64:v1.16.0
 docker pull mirrorgooglecontainers/kube-scheduler-amd64:v1.16.0
@@ -153,14 +152,24 @@ docker pull mirrorgooglecontainers/kube-proxy-amd64:v1.16.0
 docker pull mirrorgooglecontainers/pause:3.1
 docker pull mirrorgooglecontainers/etcd:3.3.15-0
 docker pull coredns/coredns:1.6.2
+2.启动一个registry仓库，方便后续节点接入
+docker run -itd --name registry -p 5000:5000 registry:latest
+3.更改镜像tag并push到registry
+docker tag k8s.gcr.io/kube-apiserver:v1.16.0          10.6.203.60:5000/kube-apiserver:v1.16.0   
+docker tag k8s.gcr.io/kube-proxy:v1.16.0              10.6.203.60:5000/kube-proxy:v1.16.0
+docker tag k8s.gcr.io/kube-controller-manager:v1.16.0 10.6.203.60:5000/kube-controller-manager:v1.16.0
+docker tag k8s.gcr.io/kube-scheduler:v1.16.0          10.6.203.60:5000/kube-scheduler:v1.16.0 
+docker tag k8s.gcr.io/etcd:3.3.15-0                   10.6.203.60:5000/etcd:3.3.15-0 
+docker tag k8s.gcr.io/coredns:1.6.2                   10.6.203.60:5000/coredns:1.6.2
+docker tag k8s.gcr.io/pause:3.1                       10.6.203.60:5000/pause:3.1 
 
-docker tag mirrorgooglecontainers/kube-apiserver-amd64:v1.16.0 k8s.gcr.io/kube-apiserver:v1.16.0
-docker tag mirrorgooglecontainers/kube-controller-manager-amd64:v1.16.0 k8s.gcr.io/kube-controller-manager:v1.16.0
-docker tag mirrorgooglecontainers/kube-scheduler-amd64:v1.16.0 k8s.gcr.io/kube-scheduler:v1.16.0
-docker tag mirrorgooglecontainers/kube-proxy-amd64:v1.16.0 k8s.gcr.io/kube-proxy:v1.16.0
-docker tag mirrorgooglecontainers/pause:3.1 k8s.gcr.io/pause:3.1
-docker tag mirrorgooglecontainers/etcd:3.3.15-0 k8s.gcr.io/etcd:3.3.15-0
-docker tag coredns/coredns:1.6.2 k8s.gcr.io/coredns:1.6.2
+docker push 10.6.203.60:5000/kube-apiserver:v1.16.0   
+docker push 10.6.203.60:5000/kube-proxy:v1.16.0
+docker push 10.6.203.60:5000/kube-controller-manager:v1.16.0
+docker push 10.6.203.60:5000/kube-scheduler:v1.16.0 
+docker push 10.6.203.60:5000/etcd:3.3.15-0 
+docker push 10.6.203.60:5000/coredns:1.6.2
+docker push 10.6.203.60:5000/pause:3.1 
 ```
 - kubeadm 初始化集群
 ```
@@ -168,6 +177,8 @@ docker tag coredns/coredns:1.6.2 k8s.gcr.io/coredns:1.6.2
 kubeadm config print init-defaults
 2.基础默认修改cluster配置文件
 kubeadm init --config k8s-cluster001.yaml
+3.将imageRepository更改为刚刚创建的registry
+imageRepository: 10.6.203.60:5000
 [root@k8s-master01 ~]# kubeadm init --config k8s-cluster001.yaml
 [init] Using Kubernetes version: v1.16.0
 [preflight] Running pre-flight checks
@@ -266,4 +277,38 @@ daemonset.apps/calico-node created
 serviceaccount/calico-node created
 deployment.apps/calico-kube-controllers created
 serviceaccount/calico-kube-controllers created
+```
+
+- 查看全部namespaces下的资源
+```
+[root@k8s-master01 ~]# kubectl get all --all-namespaces 
+NAMESPACE     NAME                                          READY   STATUS    RESTARTS   AGE
+kube-system   pod/calico-kube-controllers-dc6cb64cb-s5l6d   1/1     Running   0          168m
+kube-system   pod/calico-node-x5s4f                         1/1     Running   0          168m
+kube-system   pod/coredns-765bb46f58-5pmvm                  1/1     Running   0          175m
+kube-system   pod/coredns-765bb46f58-qgrzj                  1/1     Running   0          175m
+kube-system   pod/etcd-k8s-master01                         1/1     Running   0          174m
+kube-system   pod/kube-apiserver-k8s-master01               1/1     Running   0          174m
+kube-system   pod/kube-controller-manager-k8s-master01      1/1     Running   0          174m
+kube-system   pod/kube-proxy-kxh22                          1/1     Running   0          175m
+kube-system   pod/kube-scheduler-k8s-master01               1/1     Running   0          174m
+
+NAMESPACE     NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+default       service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP                  175m
+kube-system   service/kube-dns     ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   175m
+
+NAMESPACE     NAME                         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE
+kube-system   daemonset.apps/calico-node   1         1         1       1            1           beta.kubernetes.io/os=linux   168m
+kube-system   daemonset.apps/kube-proxy    1         1         1       1            1           beta.kubernetes.io/os=linux   175m
+
+NAMESPACE     NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
+kube-system   deployment.apps/calico-kube-controllers   1/1     1            1           168m
+kube-system   deployment.apps/coredns                   2/2     2            2           175m
+
+NAMESPACE     NAME                                                DESIRED   CURRENT   READY   AGE
+kube-system   replicaset.apps/calico-kube-controllers-dc6cb64cb   1         1         1       168m
+kube-system   replicaset.apps/coredns-765bb46f58                  2         2         2       175m
+[root@k8s-master01 ~]# kubectl get nodes 
+NAME           STATUS   ROLES    AGE    VERSION
+k8s-master01   Ready    master   176m   v1.16.2
 ```
