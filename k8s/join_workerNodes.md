@@ -32,7 +32,7 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 # kubectl get nodes 
 NAME           STATUS     ROLES    AGE     VERSION
 k8s-master01   Ready      master   6h59m   v1.16.2
-k8s-master03   NotReady   <none>   4m46s   v1.16.3 （尴尬竟然部署一个版本,master节点与worker节点部署拖拉太久）
+k8s-master03   NotReady   <none>   4m46s   v1.16.3 （尴尬竟然不是一个版本,master节点与worker节点部署拖拉太久）
 # kubectl get pods --all-namespaces (查看因为镜像无法pull成功导致异常)
 NAMESPACE     NAME                                      READY   STATUS              RESTARTS   AGE
 kube-system   calico-kube-controllers-dc6cb64cb-s5l6d   1/1     Running             0          6h52m
