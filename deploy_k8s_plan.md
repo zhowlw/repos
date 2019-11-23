@@ -140,9 +140,9 @@ EOF
 2.安装kubeadm、kubelet、kubectl
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 ```
-- 从dockerhub下载k8s组件镜像文件(docker将imgage镜像到了dockerHub中)
+- 从dockerhub下载k8s组件镜像文件(docker将k8s_image镜像到了dockerHub中)
 
-[DockerHub](https://hub.docker.com/u/mirrorgooglecontainers/)
+[k8s_images](https://hub.docker.com/u/mirrorgooglecontainers/)
 ```
 1. 下载镜像文件
 docker pull mirrorgooglecontainers/kube-apiserver-amd64:v1.16.0
@@ -249,10 +249,9 @@ kubeadm join 10.6.203.60:6443 --token abcdef.0123456789abcdef \
     --discovery-token-ca-cert-hash sha256:3df3bcde7bddf019fced3d8a726c458ae09c4d8bd0a87585cd740ff946bf1830 
 ```
 - 部署calico网络
-```
 [k8s_network](https://kubernetes.io/docs/concepts/cluster-administration/addons/)
 [calico_install](https://docs.projectcalico.org/v3.9/getting-started/kubernetes/)
-
+```
 [root@k8s-master01 ~]# kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml
 configmap/calico-config created
 customresourcedefinition.apiextensions.k8s.io/felixconfigurations.crd.projectcalico.org created
