@@ -22,7 +22,7 @@ EOF
 - 配置ansible运维工具
 ```
 1.安装ansible 
-yum isntall -d ansible && yum install -y ansible
+yum install -d ansible && yum install -y ansible
 
 2.节点间配置互信
 [root@k8s-master01 ~]# ssh-keygen -t rsa 
