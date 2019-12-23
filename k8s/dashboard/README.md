@@ -1,4 +1,4 @@
-1. 镜像文件
+1. 镜像文件 [下载链接](https://github.com/bertreyking/repos/releases)
 ```
 docker load -i dashboard-v2.0.0-beta8.tar.gz
 docker load -i metrics-scraper-v1.0.2.tar.gz
