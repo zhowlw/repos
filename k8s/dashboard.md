@@ -31,28 +31,26 @@ deployment.apps/dashboard-metrics-scraper created
 
 [root@k8s-master01 dashboard]# kubectl get all -n kubernetes-dashboard
 NAME                                            READY   STATUS    RESTARTS   AGE
-pod/dashboard-metrics-scraper-b76b67fc8-c9cxp   1/1     Running   0          2m28s
-pod/kubernetes-dashboard-795f7465f5-b85qz       1/1     Running   0          2m28s
-NAME                                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
-service/dashboard-metrics-scraper   ClusterIP   10.100.102.36   <none>        8000/TCP   2m29s
-service/kubernetes-dashboard        ClusterIP   10.103.81.117   <none>        443/TCP    2m30s
+pod/dashboard-metrics-scraper-b76b67fc8-c9cxp   1/1     Running   0          155m
+pod/kubernetes-dashboard-795f7465f5-79bw5       1/1     Running   0          117m
+NAME                                TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/dashboard-metrics-scraper   NodePort   10.100.102.36   <none>        8000:30642/TCP   155m
+service/kubernetes-dashboard        NodePort   10.103.81.117   <none>        443:30010/TCP    155m
 NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/dashboard-metrics-scraper   1/1     1            1           2m29s
-deployment.apps/kubernetes-dashboard        1/1     1            1           2m29s
+deployment.apps/dashboard-metrics-scraper   1/1     1            1           155m
+deployment.apps/kubernetes-dashboard        1/1     1            1           155m
 NAME                                                  DESIRED   CURRENT   READY   AGE
-replicaset.apps/dashboard-metrics-scraper-b76b67fc8   1         1         1       2m29s
-replicaset.apps/kubernetes-dashboard-795f7465f5       1         1         1       2m29s
+replicaset.apps/dashboard-metrics-scraper-b76b67fc8   1         1         1       155m
+replicaset.apps/kubernetes-dashboard-795f7465f5       1         1         1       155m
 ```
-3. 启动临时proxy
+3. 在default中创建service account 并绑定给cluster-admin 管理员角色
 ```
-[root@k8s-master01 dashboard]# kubectl proxy
-Starting to serve on 127.0.0.1:8001
+kubectl create serviceaccount test01
 
-[root@k8s-master01 ~]# netstat -anltp | grep 8001
-tcp        0      0 127.0.0.1:8001          0.0.0.0:*               LISTEN      2857/kubectl 
-```
+kubectl create clusterrolebinding test01 --clusterrole=cluster-admin --serviceaccount=default:test01
 
-4. 验证
+kubectl get secrets
+
+kubectl describe secrets xxxxx -n default     ####将tocken复制保存以备登陆时使用
 ```
-curl 
-```
+4. 验证 https://nodeIP:30010 选择tocken、输入tocken即可
