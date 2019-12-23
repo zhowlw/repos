@@ -8,3 +8,7 @@ docker load -i metrics-scraper-v1.0.2.tar.gz
 - yaml 中已包含service account 及 clusterrole 等资源，无需重新创建
 - 原文件不支持nodePort，仅做了支持nodePort访问的修改
 ```
+
+[k8s for dashboard](https://github.com/kubernetes/dashboard)
+
+[参考blog](https://www.replex.io/blog/how-to-install-access-and-add-heapster-metrics-to-the-kubernetes-dashboard)
