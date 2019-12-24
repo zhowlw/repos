@@ -11,7 +11,8 @@ source /usr/share/bash-completion/bash_completion
 source <(kubectl completion bash)
 echo "source <(kubectl completion bash)" >> ~/.bashrc
 ```
-2. dashboard （chrome 无法打开 dashboard）[参考链接]（https://github.com/kubernetes/dashboard/issues/2947）
+2. dashboard （chrome 无法打开 dashboard）[参考链接](https://github.com/kubernetes/dashboard/issues/2947)
+
 ```
 原因： 浏览器配置不允许使用自签名证书，因为yaml所创建dashboard的secrets中没有证书信息，最终导致无法正常访问
 # mkdir /certs
