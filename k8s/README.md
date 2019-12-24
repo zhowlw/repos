@@ -14,7 +14,7 @@ echo "source <(kubectl completion bash)" >> ~/.bashrc
 2. dashboard （chrome 无法打开 dashboard）[参考链接](https://github.com/kubernetes/dashboard/issues/2947)
 
 ```
-原因： 浏览器配置不允许使用自签名证书，因为yaml所创建dashboard的secrets中没有证书信息，最终导致无法正常访问
+- 原因： 浏览器配置不允许使用自签名证书，因为yaml所创建dashboard的secrets中没有证书信息，最终导致无法正常访问
 # mkdir /certs
 
 # openssl req -nodes -newkey rsa:2048 -keyout /certs/dashboard.key -out /certs/dashboard.csr -subj "/C=/ST=/L=/O=/OU=/CN=kubernetes-dashboard"
@@ -36,4 +36,6 @@ Data
 dashboard.csr:  907 bytes
 dashboard.key:  1704 bytes
 dashboard.crt:  1005 bytes
+
+- 另外我的环境需要手动删除下kubernetes-dashboard pod 才可以通过chrome正常访问
 ```
