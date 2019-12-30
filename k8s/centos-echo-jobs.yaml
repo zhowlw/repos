@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: centos-job-echo
+  labels:
+    app: centos-job-echo
+  namespace: test-tenant
+spec:
+  completions: 2
+  parallelism: 4
+  template:
+    metadata:
+      name: centos-job-echo
+      labels:
+        app: centos-job-echo
+    spec:
+      containers:
+      - name: centos-job-echo
+        image: 10.6.203.60:5000/centos-base:191224
+        imagePullPolicy: Always
+        command: ["/bin/echo"]
+        args: ["this is test jobs"]
+      restartPolicy: OnFailure

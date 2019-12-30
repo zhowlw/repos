@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dig-test01
+  namespace: default
+  labels:
+    app: dig-test01
+spec:
+  replicas: 3
+  selector: 
+    matchLabels:
+      app: dig-test01
+  template:
+    metadata:
+      labels:
+        app: dig-test01
+    spec:
+      containers:
+      - name: dig-test01
+        image: 10.6.203.60:5000/centos-base:191224
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo hello; sleep 10;done"]
+        imagePullPolicy: IfNotPresent
+        port:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /tmp/
+          name: tmp-hello
+      volumes:
+      - name: tmp-hello
+        hostPath:
+          path: /logs/current/dig-test01
+          type: DirectoryOrCreate
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dig-test01
+  namespace: default
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  type: NodePort
