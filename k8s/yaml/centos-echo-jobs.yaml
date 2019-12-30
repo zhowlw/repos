@@ -6,8 +6,8 @@ metadata:
     app: centos-job-echo
   namespace: test-tenant
 spec:
-  completions: 2
-  parallelism: 4
+  completions: 4
+  parallelism: 2
   template:
     metadata:
       name: centos-job-echo
