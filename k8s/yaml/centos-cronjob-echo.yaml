@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: centos-cronjob-echo
+  namespace: test-tenant
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        app: centos-cronjob-echo
+    spec:
+      completions: 4
+      parallelism: 2
+      template:
+        metadata:
+          labels:
+            app: centos-cronjob-echo
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: centos-cronjob-echo
+            image: 10.6.203.60:5000/centos-base:191224
+            imagePullPolicy: IfNotPresent
+            command: ["/bin/echo"]
+            args: ["This is a Test cronjob！"]
